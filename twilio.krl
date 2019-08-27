@@ -16,18 +16,16 @@ ruleset twilio {
             })
     }
 
-    messages = defaction(to, from, pagenumber) { //sentNumber, receivedNumber, pagination
-      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/Messages.json/>>
+    messages = function(to, from, pagenumber) {
+      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/Messages.json/>>;
+      messageresult = http:get(base_url){"content"}.decode(){"messages"};
 
-      messageresult = http:get(base_url){"content"}{"messages"}
-      filterTo = (to.length() > 0) => messageresult.filter(function(x) {x{"to"} == to}) | messageresult
-      filterToAndFrom = (from.length() > 0) => filterTo.filter(function(x) {x{"from"} == from}) | filterTo
-      every {
-        send_directive("say", {"message":"message here!"})
-      }
-      returns {
-        "messages": filterToAndFrom
-      }
+      // // Filter result based on parameters
+      to = (to.length() > 0) => "+" + to | to;
+      from = (from.length() > 0) => "+" + from | from;
+      filterTo = (to.length() > 1) => messageresult.filter(function(x) {x{"to"} == to}) | messageresult;
+      filterToAndFrom = (from.length() > 1) => filterTo.filter(function(x) {x{"from"} == from}) | filterTo;
+      filterToAndFrom
 
     }
 

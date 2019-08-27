@@ -8,7 +8,9 @@ ruleset lab2_twilio {
   }
 
   global {
-    __testing = { "events": [ { "domain": "test", "type": "messages" } ] }
+    __testing = { "events": [ { "domain": "test", "type": "messages" } ] };
+
+
   }
 
   rule test_send_sms {
@@ -21,15 +23,12 @@ ruleset lab2_twilio {
   rule test_messages {
     select when test messages
     pre {
-      twilio:messages(event:attr("to"),
-                      event:attr("from")) setting(messageresult)
-
+      messageresult = twilio:messages(event:attr("to"),
+                      event:attr("from"), event:attr("pagenumber"));
     }
-
+    send_directive ("say", {"messages": messageresult})
     always {
       messageresult.klog()
-      filterTo.klog()
-      filterToAndFrom.klog()
     }
   }
 }
